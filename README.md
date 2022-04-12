@@ -1,5 +1,10 @@
 # IFT780-TP3
 
+## Lien vers le meilleur modèle
+
+Notre meilleur modèle est disponible sur Google Drive à l'adresse suivante : https://drive.google.com/file/d/1KsO2wm96NJshsgjusdiv3UnmoBLdDSn9/view?usp=sharing
+
+
 ## Données
 
 Le travail pratique 3 vous demandera d'effectuer de la segmentation sur le Automated Cardiac Diagnosis Challenge (ACDC) dataset[^1]. Commencez d'abord par exécuter: 
