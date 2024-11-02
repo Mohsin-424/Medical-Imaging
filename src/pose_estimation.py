@@ -4,7 +4,7 @@ import math
 import streamlit as st
 import os
 import datetime
-import plotly.graph_objects as go  # Import Plotly for gauge creation
+import tempfile
 
 class poseDetector:
     def __init__(self, mode=False, modelComp=1, smoothlm=True, segment=False, smoothsegment=True, detectionCon=0.5, trackingCon=0.5):
@@ -58,21 +58,7 @@ class poseDetector:
             cv2.putText(frame, str(int(angle)), (x2, y2), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0), 2)
         return angle
 
-def create_gauge(angle_name, angle_value):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=angle_value,
-        title={'text': angle_name},
-        gauge={'axis': {'range': [0, 180]},
-               'bar': {'color': "royalblue"}},
-    ))
-    fig.update_layout(height=200, margin=dict(t=0, b=0, l=0, r=0))
-    return fig
-
 def run_pose_estimation(patient_folder):
-    if not os.path.exists(patient_folder):
-        os.makedirs(patient_folder)
-
     if 'start_pose' not in st.session_state:
         st.session_state.start_pose = False
     if 'frame_for_screenshot' not in st.session_state:
@@ -93,25 +79,19 @@ def run_pose_estimation(patient_folder):
         if st.button("Take Screenshot", key="screenshot_button"):
             if st.session_state.frame_for_screenshot is not None:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                patient_name = st.session_state.get('patient_name', 'Unknown')
-                patient_age = st.session_state.get('patient_age', 'Unknown')
-                screenshot_filename = os.path.join(
-                    patient_folder,
-                    f"pose_{patient_name}_{patient_age}_{timestamp}.png"
-                )
-                cv2.imwrite(screenshot_filename, st.session_state.frame_for_screenshot)
-                st.write(f"Screenshot saved to {screenshot_filename}")
-                st.session_state.screenshot_counter += 1
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+                    screenshot_filename = tmp_file.name
+                    cv2.imwrite(screenshot_filename, st.session_state.frame_for_screenshot)
+                    st.write(f"Screenshot saved temporarily as {screenshot_filename}")
+                    st.session_state.screenshot_counter += 1
+                    st.session_state.latest_screenshot = screenshot_filename
             else:
                 st.write("No frame available to capture.")
 
     if st.session_state.start_pose:
         stframe = st.empty()
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(0)
         detector = poseDetector()
-
-        # Create a placeholder container for gauges
-        gauge_col1, gauge_col2 = st.columns(2)
 
         while st.session_state.start_pose:
             ret, frame = cap.read()
@@ -123,24 +103,23 @@ def run_pose_estimation(patient_folder):
             frame_with_pose = detector.findPose(resized)
             lmList = detector.findPosition(frame_with_pose, draw=False)
 
-            angles = {}
             if len(lmList) != 0:
-                angles["Left Shoulder"] = detector.findAngle(frame_with_pose, 23, 11, 13)
-                angles["Right Shoulder"] = detector.findAngle(frame_with_pose, 24, 12, 14)
-                angles["Left Hip"] = detector.findAngle(frame_with_pose, 23, 25, 27)
-                angles["Right Hip"] = detector.findAngle(frame_with_pose, 24, 26, 28)
+                detector.findAngle(frame_with_pose, 23, 11, 13)
+                detector.findAngle(frame_with_pose, 24, 12, 14)
+                detector.findAngle(frame_with_pose, 23, 25, 27)
+                detector.findAngle(frame_with_pose, 24, 26, 28)
 
             stframe.image(frame_with_pose, channels="BGR")
             st.session_state.frame_for_screenshot = frame_with_pose
 
-            # Update gauges
-            with gauge_col1:
-                for i, (name, angle) in enumerate(list(angles.items())[:2]):  # First two angles in col1
-                    st.plotly_chart(create_gauge(name, angle), use_container_width=True)
-
-            with gauge_col2:
-                for i, (name, angle) in enumerate(list(angles.items())[2:]):  # Next two angles in col2
-                    st.plotly_chart(create_gauge(name, angle), use_container_width=True)
-
         cap.release()
         cv2.destroyAllWindows()
+
+    if 'latest_screenshot' in st.session_state:
+        with open(st.session_state.latest_screenshot, "rb") as file:
+            btn = st.download_button(
+                label="Download Latest Screenshot",
+                data=file,
+                file_name=f"pose_screenshot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                mime="image/png"
+            )

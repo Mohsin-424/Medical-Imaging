@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import os
 import datetime
+import tempfile
 
 # Load the pre-trained MobileNetV2 model for feature extraction
 feature_extractor = MobileNetV2(weights='imagenet', include_top=False, pooling='avg')
@@ -67,14 +68,17 @@ def process_video(patient_folder):
         while st.session_state.streaming:
             ret, frame = cap.read()
             if not ret:
+                st.error("Error: Unable to capture video.")
                 break
             
+            # Flip and resize the frame
             frame = cv2.flip(frame, 1)
             small_frame = cv2.resize(frame, (resize_width, resize_height))
             gray = cv2.cvtColor(small_frame, cv2.COLOR_BGR2GRAY)
             faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
             
             for (x, y, w, h) in faces:
+                # Adjust bounding box to original frame size
                 x *= (frame.shape[1] / resize_width)
                 y *= (frame.shape[0] / resize_height)
                 w *= (frame.shape[1] / resize_width)
@@ -82,11 +86,10 @@ def process_video(patient_folder):
                 
                 x, y, w, h = int(x), int(y), int(w), int(h)
                 
+                # Extract face and predict pain level
                 face = frame[y:y+h, x:x+w]
                 features = extract_features(face)
                 features = np.expand_dims(features, axis=0)
-                
-                # Predict pain level
                 prediction = pain_model.predict(features)
                 pain_level = np.argmax(prediction, axis=1)[0]
                 
@@ -124,14 +127,13 @@ def process_video(patient_folder):
                 fig.update_layout(title=f'Pain Level Over Time for {patient_name}, Age {patient_age}',
                                   xaxis_title='Time',
                                   yaxis_title='Pain Level')
-                
-                # Ensure the patient folder exists
-                if not os.path.exists(patient_folder):
-                    os.makedirs(patient_folder)
-                
-                report_path = os.path.join(patient_folder, f'pain_level_report_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png')
-                fig.write_image(report_path)
-                st.success(f'Report saved to {report_path}')
+
+                # Create a temporary directory to save the report
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    report_path = os.path.join(temp_dir, f'pain_level_report_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png')
+                    fig.write_image(report_path)
+                    st.success(f'Report saved to temporary location: {report_path}')
+                    st.download_button(label='Download Report', data=open(report_path, 'rb').read(), file_name=os.path.basename(report_path), mime='image/png')
             else:
                 st.warning('No data available to save.')
 

@@ -1,10 +1,11 @@
 import streamlit as st
 import os
+import tempfile
 from streamlit_option_menu import option_menu
 from pain_recognition import process_video
 from pose_estimation import run_pose_estimation
 from plantar_pressure import run_plantar_pressure_analysis
-from report_generation import generate_report  # Import the report generation function
+from report_generation import generate_report
 
 # Set page configuration
 st.set_page_config(page_title="OrthoSynergy", layout="wide", initial_sidebar_state="expanded")
@@ -17,9 +18,6 @@ def create_patient_folder(patient_name, patient_age):
     return patient_folder
 
 def main():
-    #st.title("OrthoSynergy")
-    # st.image(r"E:\Final Year Project\ortho_project\src\transparent_ortho_synergy_logo.png", use_column_width=True)
-
     # Custom styling for fonts, sidebar, and font colors
     st.markdown("""
     <style>
@@ -89,7 +87,7 @@ def main():
         background-color: #5f9ea0;  /* Darker shade of light blue on hover */
     }
     </style>
-""", unsafe_allow_html=True)  # Keep your existing CSS styling here
+""", unsafe_allow_html=True)  
 
     # Optional logo - local image
     st.sidebar.image(r"E:\Final Year Project\ortho_project\src\transparent_ortho_synergy_logo.png", use_column_width=True)
@@ -129,17 +127,14 @@ def main():
 
         # Pain Recognition
         if selected_module == "Pain Recognition":
-            #st.header("Pain Recognition")
             process_video(st.session_state.patient_folder)
 
         # Plantar Pressure
         if selected_module == "Plantar Pressure":
-            #st.header("Plantar Pressure Analysis")
             run_plantar_pressure_analysis(st.session_state.patient_folder)
 
         # Pose Estimation
         if selected_module == "Pose Estimation":
-            #st.header("Pose Estimation")
             run_pose_estimation(st.session_state.patient_folder)
 
         # Report Generation
@@ -147,12 +142,21 @@ def main():
             st.header("Generate Patient Report")
             if st.button("Generate Report"):
                 if st.session_state.patient_folder:
+                    # Generate the report and store it temporarily
                     pdf_path = generate_report(
                         st.session_state.patient_folder,
                         st.session_state.patient_name,
                         st.session_state.patient_age
                     )
-                    st.success(f"Report generated and saved at: {pdf_path}")
+                    # Provide a download link for the report
+                    with open(pdf_path, "rb") as pdf_file:
+                        pdf_bytes = pdf_file.read()
+                        st.download_button(
+                            label="Download Report",
+                            data=pdf_bytes,
+                            file_name=os.path.basename(pdf_path),
+                            mime="application/pdf"
+                        )
                 else:
                     st.warning("Patient folder not found.")
                 
@@ -161,8 +165,6 @@ def main():
                 st.session_state.patient_name = ""
                 st.session_state.patient_age = ""
                 st.session_state.patient_folder = ""
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
 
 if __name__ == "__main__":
     main()

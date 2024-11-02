@@ -6,7 +6,8 @@ import os
 import time
 import datetime
 import threading
-import cv2  # Import OpenCV for screenshots
+import cv2
+import tempfile  # Import tempfile for temporary file storage
 
 # Global variables to track serial connections
 ser_left = None
@@ -30,15 +31,15 @@ def run_plantar_pressure_analysis(patient_folder):
     # Display Start/Stop buttons based on the running state
     if st.session_state.is_running:
         st.button('Stop Plantar Pressure Analysis', key='stop_analysis', on_click=stop_plantar_pressure)
-        st.button('Take Screenshot', key='screenshot_button', on_click=take_screenshot, args=(patient_folder,))
+        st.button('Take Screenshot', key='screenshot_button', on_click=take_screenshot)
     else:
         st.button('Start Plantar Pressure Analysis', key='start_analysis', on_click=start_plantar_pressure)
         st.button('Reset State', key='reset_state', on_click=reset_state)
 
-    # Create empty containers for side-by-side heatmaps (outside the loop)
-    col1, col2 = st.columns(2)  # Two columns for left and right foot heatmaps
-    left_placeholder = col1.empty()  # Placeholder for left foot heatmap
-    right_placeholder = col2.empty()  # Placeholder for right foot heatmap
+    # Create empty containers for side-by-side heatmaps
+    col1, col2 = st.columns(2)
+    left_placeholder = col1.empty()
+    right_placeholder = col2.empty()
 
     # Display the heatmaps if the analysis is running
     if st.session_state.is_running:
@@ -49,7 +50,7 @@ def run_plantar_pressure_analysis(patient_folder):
                                      title="Left Foot Pressure",
                                      zmin=1, zmax=100, aspect='equal')
                 fig_left.update_traces(zsmooth='best')
-                left_placeholder.plotly_chart(fig_left, use_container_width=True)  # Update the left heatmap
+                left_placeholder.plotly_chart(fig_left, use_container_width=True)
 
             if ser_right and pressure_matrix_right is not None:
                 fig_right = px.imshow(pressure_matrix_right, color_continuous_scale='hot',
@@ -57,14 +58,14 @@ def run_plantar_pressure_analysis(patient_folder):
                                       title="Right Foot Pressure",
                                       zmin=1, zmax=100, aspect='equal')
                 fig_right.update_traces(zsmooth='best')
-                right_placeholder.plotly_chart(fig_right, use_container_width=True)  # Update the right heatmap
+                right_placeholder.plotly_chart(fig_right, use_container_width=True)
 
             # Collect data for screenshots
             st.session_state.left_pressure_data.append(pressure_matrix_left)
             st.session_state.right_pressure_data.append(pressure_matrix_right)
 
             # Save the current frame for screenshot
-            st.session_state.frame_for_screenshot = pressure_matrix_left  # Assign current left matrix to screenshot
+            st.session_state.frame_for_screenshot = pressure_matrix_left
             time.sleep(0.1)  # Adjust update rate
 
 def start_plantar_pressure():
@@ -83,7 +84,7 @@ def start_plantar_pressure():
     pressure_matrix_left = np.zeros((6, 3)) if ser_left else None
     pressure_matrix_right = np.zeros((6, 3)) if ser_right else None
 
-    stop_event = threading.Event()  # Create the stop event
+    stop_event = threading.Event()
     thread = threading.Thread(target=read_pressure_matrices, daemon=True)
     thread.start()
 
@@ -92,7 +93,7 @@ def start_plantar_pressure():
 def stop_plantar_pressure():
     global stop_event, ser_left, ser_right
 
-    stop_event.set()  # Stop the reading loop
+    stop_event.set()
     if ser_left:
         ser_left.close()
     if ser_right:
@@ -100,7 +101,7 @@ def stop_plantar_pressure():
 
     st.success("Plantar pressure analysis stopped.")
     st.session_state.is_running = False
-    st.session_state.show_save_button = True  # Enable the Save Report button
+    st.session_state.show_save_button = True
 
 def read_pressure_matrices():
     global pressure_matrix_left, pressure_matrix_right, stop_event
@@ -131,18 +132,18 @@ def read_pressure_matrices():
                     print("Error reading from right foot Arduino:", e)
             pressure_matrix_right[:] = new_matrix_right
 
-        time.sleep(0.01)  # Control update rate
+        time.sleep(0.01)
 
 def reset_state():
     st.session_state.is_running = False
     st.session_state.show_save_button = False
     st.session_state.left_pressure_data = []
     st.session_state.right_pressure_data = []
-    st.session_state.frame_for_screenshot = None  # Reset frame for screenshots
-    st.session_state.screenshot_counter = 0  # Reset screenshot counter
+    st.session_state.frame_for_screenshot = None
+    st.session_state.screenshot_counter = 0
     st.success('Session state reset.')
 
-def take_screenshot(patient_folder):
+def take_screenshot():
     # Check if there's a valid frame to save
     if st.session_state.frame_for_screenshot is not None and st.session_state.frame_for_screenshot.size > 0:
         # Create a timestamp for the screenshot
@@ -150,24 +151,26 @@ def take_screenshot(patient_folder):
         patient_name = st.session_state.get('patient_name', 'Unknown')
         patient_age = st.session_state.get('patient_age', 'Unknown')
 
-        # Save left foot screenshot
-        left_image_path = os.path.join(patient_folder, f'left_foot_screenshot_{patient_name}_{patient_age}_{timestamp}.png')
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save left foot screenshot
+            left_image_path = os.path.join(temp_dir, f'left_foot_screenshot_{patient_name}_{patient_age}_{timestamp}.png')
 
-        # Convert to color image
-        left_image_color = cv2.applyColorMap((st.session_state.frame_for_screenshot * 255).astype(np.uint8), cv2.COLORMAP_JET)
-        left_image_color = cv2.resize(left_image_color, (600, 400))  # Resize as needed
-        cv2.imwrite(left_image_path, left_image_color)
-
-        # Save right foot screenshot if it exists
-        if pressure_matrix_right is not None and pressure_matrix_right.size > 0:
-            right_image_path = os.path.join(patient_folder, f'right_foot_screenshot_{patient_name}_{patient_age}_{timestamp}.png')
-            
             # Convert to color image
-            right_image_color = cv2.applyColorMap((pressure_matrix_right * 255).astype(np.uint8), cv2.COLORMAP_JET)
-            right_image_color = cv2.resize(right_image_color, (600, 400))  # Resize as needed
-            cv2.imwrite(right_image_path, right_image_color)
+            left_image_color = cv2.applyColorMap((st.session_state.frame_for_screenshot * 255).astype(np.uint8), cv2.COLORMAP_JET)
+            left_image_color = cv2.resize(left_image_color, (600, 400))  # Resize as needed
+            cv2.imwrite(left_image_path, left_image_color)
 
-        st.success(f"Screenshots saved in {patient_folder}.")
-        st.session_state.screenshot_counter += 1
+            # Save right foot screenshot if it exists
+            if pressure_matrix_right is not None and pressure_matrix_right.size > 0:
+                right_image_path = os.path.join(temp_dir, f'right_foot_screenshot_{patient_name}_{patient_age}_{timestamp}.png')
+                
+                # Convert to color image
+                right_image_color = cv2.applyColorMap((pressure_matrix_right * 255).astype(np.uint8), cv2.COLORMAP_JET)
+                right_image_color = cv2.resize(right_image_color, (600, 400))  # Resize as needed
+                cv2.imwrite(right_image_path, right_image_color)
+
+            st.success(f"Screenshots saved in temporary directory: {temp_dir}.")
+            st.session_state.screenshot_counter += 1
     else:
         st.warning('No frame available to save a screenshot.')
