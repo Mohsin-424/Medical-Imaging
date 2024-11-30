@@ -1,66 +1,55 @@
-# IFT780-TP3
+IFT780-TP3
+Link to the Best Model
+Our best model is available on Google Drive at the following address: Google Drive Link.
 
-## Lien vers le meilleur modèle
+Dataset
+For this third practical assignment, you are required to perform segmentation on the Automated Cardiac Diagnosis Challenge (ACDC) dataset1. Start by executing:
 
-Notre meilleur modèle est disponible sur Google Drive à l'adresse suivante : https://drive.google.com/file/d/1KsO2wm96NJshsgjusdiv3UnmoBLdDSn9/view?usp=sharing
+bash
+Copy code
+pip install -r requirements.txt
+The classes are as follows:
 
+0: background,
+1: Right ventricle,
+2: Myocardium,
+3: Left ventricle.
+The data contains only one modality (cine-MRI) and is acquired in 3D.
 
-## Données
+Provided Code
 
-Le travail pratique 3 vous demandera d'effectuer de la segmentation sur le Automated Cardiac Diagnosis Challenge (ACDC) dataset[^1]. Commencez d'abord par exécuter: 
+The provided code allows you to train a model for N epochs, specifying the learning rate, optimizer, and batch size. You are free to modify the code as needed to meet the assignment requirements.
 
-`pip install -r requirements.txt`
+To Do:
+The following sections describe the features you need to add to the code for managing your training processes. Note: All these features must be modifiable via the command line!
 
-Les classes sont les suivantes:
+Architectures (3 points)
+You must implement three different architectures (excluding the one provided) and design one of your own. If you lack inspiration, you can take cues from the IFT780Net used in TP2. Your report should include a figure representing your custom architecture, as seen in the course notes. For the other two, it is recommended to research well-performing segmentation architectures from the internet or course materials.
 
-- 0: background, 
-- 1: Ventricule droite
-- 2: Myocarde
-- 3: Ventricule gauche
+Hyperparameter Search (2 points)
+You must modify the provided code to perform a hyperparameter search for the implemented models. Considerable hyperparameters might include the learning rate, optimizer, or specific parameters of your architectures.
 
-Les données ne contiennent qu'une seule modalité (ciné-IRM) et sont acquises en 3D.
+Checkpointing (1 point)
+You must implement a method to save the model during training and resume it after an interruption (e.g., a power outage or an accidental Ctrl-C).
 
-## Code fourni
+Data Augmentation (2 points)
+You must add functionalities to apply various types of data augmentation during training.
 
-Le code fourni vous permet de lancer un entraînement pendant N epochs avec un modèle, de spécifier le learning rate, l'optimiseur et la batch size. Vous avez le droit de tout modifier dans le code pour répondre à vos besoins.
+Bonus: Alternative Loss Function (1 point)
+While cross-entropy is currently used as the loss function, many alternatives exist. You must implement another loss function for training the network, explain its advantages, and demonstrate them. For inspiration: 2.
 
-# À faire:
+Report
+For each of the features mentioned above, you must specify in your report how and where in the code they were added, along with examples of their usage and their impact on training. You must also describe the process used to find the best combination of training parameters that yield the best performance on the test set.
 
-Les sous-sections suivantes décrirons les "features" à ajouter au code pour gérer vos entraînements. **À noter**: toutes ces caractéristiques doivent être modifiable à même la ligne de commande !   
+Finally, include relevant learning curves and an analysis of them. Your report should be comprehensive enough to allow me to easily reproduce your experiments.
 
-## Architectures (3 points)
+Code (2 points)
+You will be evaluated on the quality and usability of the submitted code. Imagine you are giving this code to a colleague who hasn’t taken this course but would still like to train neural networks. I should not need to modify the code during grading. It should be possible to change the model, hyperparameters, perform a hyperparameter search, etc., by modifying the command-line arguments only. Nothing should be hardcoded.
 
-Vous devrez implémenter trois architectures différentes, excluant celle fournie, en plus d'en concevoir une de votre cru. Vous pouvez vous inspirer du IFT780Net du TP2 si vous manquez d'inspiration. Vous devrez inclure dans votre rapport une figure représentant votre architecture, comme vu dans les notes du cours. Pour les deux autres, il vous est conseillé de fouiller un peu sur internet et dans les notes pour des architectures qui sont reconnues pour bien performer sur la segmentation.
+Submission
+You must submit your report, code, and the weights of your best model so that I can test its performance.
 
-## Recherche d'hyperparamètres (2 points)
+Footnotes
+ACDC Dataset ↩
 
-Vous devrez modifier le code fourni pour permettre d'effectuer une recherche d'hyperparamètres pour les modèles implémentés. Les hyperparamètres à considérer pourraient inclure le taux d'apprentissage, l'optimiseur à utiliser, ou des paramètres de vos architectures.
-
-## Checkpointing (1 point)
-
-Vous devrez implémenter une façon de sauvegarder le modèle pendant l'entraînement, ainsi qu'une façon de reprendre celle-ci après un arrêt (une panne de courant ou un Ctrl-C mal placé, par exemple). 
-
-## Data augmentation (2 points)
-
-Vous devrez ajouter des fonctionnalités pour permettre l'ajout de plusieurs types de "data augmentation" pendant l'entraînement.
-
-## Bonus: Loss alternative (1 point)
-
-Alors que la l'entropie croisée est présentement utilisée comme fonction de perte, pleins d'alternatives existent. Vous devrez implémenter une autre loss afin d'entraîner le réseau, expliquer ses avantages et les démontrer. Pour vous inspirer: [^2]
-
-# Rapport
-
-Pour chacune des fonctionnalités mentionnées précédemment, vous devrez mentionner dans votre rapport comment et où dans le code celles-ci ont été ajoutées, ainsi qu'un exemple d'utilisation de celles-ci et de l'impact qu'elles ont sur l'entraînement. Vous devrez aussi mentionner votre processus pour trouver la meilleure combinaison de paramètres d'entraînement qui vous donnera les meilleurs performances sur l'ensemble de test.
-
-Finalement, vous devrez inclure les courbes d'apprentissage pertinentes ainsi qu'une analyse de celles-ci. **Votre rapport devrait être assez complet pour me permettre facilement de reproduire moi-même vos expériences.**
-
-# Code (2 points)
-
-Vous serez évalués sur la qualité du code remis ainsi que sa facilité d'usage. Imaginez que vous donneriez le code à votre collègue qui n'as pas suivi le cours comme vous, mais qui aimerait tout de même entraîner des réseaux de neurones. **Je ne devrais pas avoir à modifier le code lors de la correction**. Il devra donc être possible de changer le modèle utilisé, les hyperparamètres, de faire une recherche d'hyperparamètres, etc. sans modifier le code, seulement en changeant les paramètres passés en ligne de commande. **Il ne faut rien hardcoder**.
-
-# Remise
-
-Vous devrez remettre votre rapport, votre code et les poids de votre meilleur modèle afin que je puisse en tester les performances.
-
-[^1]: https://acdc.creatis.insa-lyon.fr/
-[^2]: Jadon, S. (2020, October). A survey of loss functions for semantic segmentation. In 2020 IEEE Conference on Computational Intelligence in Bioinformatics and Computational Biology (CIBCB) (pp. 1-7). IEEE., https://arxiv.org/pdf/2006.14822.pdf
+Jadon, S. (2020, October). A survey of loss functions for semantic segmentation. In 2020 IEEE Conference on Computational Intelligence in Bioinformatics and Computational Biology (CIBCB) (pp. 1-7). IEEE. arXiv Link ↩
