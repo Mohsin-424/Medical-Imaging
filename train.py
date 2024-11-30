@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-"""
-University of Sherbrooke
-Date:
-Authors: Mamadou Mountagha BAH & Pierre-Marc Jodoin
-License: Opensource, free to use
-Other: Suggestions are welcome
-"""
+
 
 try:
   from google.colab import files

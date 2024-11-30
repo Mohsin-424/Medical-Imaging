@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 
 """
-University of Sherbrooke
+University of the Punjab
 Date:
-Authors: Mamadou Mountagha BAH & Pierre-Marc Jodoin
+Authors: MUHAMMAD MOHSIN
 License: ...
 Other: Suggestions are welcome
 """

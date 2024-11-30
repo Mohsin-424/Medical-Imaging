@@ -8,7 +8,7 @@ def read(fname):
 setup(
     name="Tp3-ift725",
     version="0.0.1",
-    author="Pierre-Marc Jodoin",
+    author="Muhammad Mohsin",
     author_email="pierre-marc.jodoin@usherbrooke.ca",
     description="Code pour le tp3 du cours ift725",
     license="BSD",
