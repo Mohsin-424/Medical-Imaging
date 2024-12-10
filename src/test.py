@@ -1,76 +1,64 @@
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy.interpolate import griddata
-from matplotlib.animation import FuncAnimation
 
-# Updated sensor positions for a narrower and elongated outline
-narrow_factor = 0.7  # Factor to reduce the width of the feet
+# Symmetry axis for mirroring
+symmetry_axis = 200
 
-# Original positions for left foot sensors
-left_sensor_positions = np.array([
-    # Toe area
-    [0.84 * narrow_factor, 0.2], [1.06 * narrow_factor, 0.2],  # Row 1 (2 sensors)
+# Left foot sensor positions and their mappings
+left_sensor_positions = [
+     (183, 41, 'fsrReading7'), (220, 42, 'fsrReading6'), (220, 42, 'fsrReading6'),
+     (164, 85, 'fsrReading15'), (196, 84, 'fsrReading8'), (225, 84, 'fsrReading5'),
+     (160, 134, 'fsrReading14'), (192, 132, 'fsrReading11'), (224, 130, 'fsrReading4'),
+     (165, 185, 'fsrReading13'), (193, 184, 'fsrReading10'), (220, 182, 'fsrReading0'),
+     (171, 238, 'fsrReading12'), (191, 237, 'fsrReading9'), (215, 235, 'fsrReading1'),
+    (176, 301, 'fsrReading2'), (208, 299, 'fsrReading3'), (208, 299, 'fsrReading3')
+]
 
-    # Ball of the foot
-    [0.64 * narrow_factor, 0.4], [0.95 * narrow_factor, 0.4], [1.16 * narrow_factor, 0.4],  # Row 2 (3 sensors)
-    [0.54 * narrow_factor, 0.6], [0.95 * narrow_factor, 0.6], [1.26 * narrow_factor, 0.6],  # Row 3 (3 sensors)
+# Mirror left foot sensor positions to right foot
+right_sensor_positions = [
+    (2 * symmetry_axis - x, y, label) for x, y, label in left_sensor_positions
+]
 
-    # Midfoot
-    [0.46 * narrow_factor, 0.8], [0.95 * narrow_factor, 0.8], [1.34 * narrow_factor, 0.8],  # Row 4 (3 sensors)
-    [0.54 * narrow_factor, 1.0], [0.95 * narrow_factor, 1.0], [1.30 * narrow_factor, 1.0],  # Row 5 (3 sensors)
+# Foot outline points for left foot
+left_foot_outline = [
+    (176, 301), (208, 299), (215, 235), (220, 182),
+    (224, 130), (225, 84), (220, 42), (183, 41),
+    (164, 85), (160, 134), (165, 185), (171, 238), (176, 301)
+]
 
-    # Heel area
-    [0.74 * narrow_factor, 1.2], [1.16 * narrow_factor, 1.2]  # Row 6 (2 sensors)
-])
+# Mirror left foot outline to right foot
+right_foot_outline = [
+    (2 * symmetry_axis - x, y) for x, y in left_foot_outline
+]
 
-# Right foot positions, mirroring the left foot positions
-right_sensor_positions = np.array([
-    # Mirrored positions for right foot (symmetric copy)
-    [2.4 - pos[0], pos[1]] for pos in left_sensor_positions
-])
+# Create two separate plots
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 10))
 
-# Create a figure and axis for the plot
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.set_aspect('equal')
+# Plot for Left Foot
+for x, y, label in left_sensor_positions:
+    ax1.scatter(x, y, color='blue', s=100, label=label if label not in ax1.get_legend_handles_labels()[1] else "")
+    ax1.text(x + 5, y, label, fontsize=8, color='darkblue')
+outline_x, outline_y = zip(*left_foot_outline)
+ax1.plot(outline_x, outline_y, linestyle='--', color='gray', alpha=0.7, label='Left Foot Outline')
+ax1.invert_yaxis()  # Invert y-axis for correct orientation
+ax1.set_title("Left Foot Sensor Mapping")
+ax1.set_xlabel("X Position")
+ax1.set_ylabel("Y Position")
+ax1.grid(False)
+ax1.axis('equal')
 
-# Set plot limits and hide axis
-plt.xlim(0, 4.8)  # Updated to fit both feet
-plt.ylim(0, 1.4)
-ax.axis('off')
+# Plot for Right Foot
+for x, y, label in right_sensor_positions:
+    ax2.scatter(x, y, color='red', s=100, label=label if label not in ax2.get_legend_handles_labels()[1] else "")
+    ax2.text(x + 5, y, label, fontsize=8, color='darkred')
+outline_x, outline_y = zip(*right_foot_outline)
+ax2.plot(outline_x, outline_y, linestyle='--', color='lightgray', alpha=0.7, label='Right Foot Outline')
+ax2.invert_yaxis()  # Invert y-axis for correct orientation
+ax2.set_title("Right Foot Sensor Mapping")
+ax2.set_xlabel("X Position")
+ax2.set_ylabel("Y Position")
+ax2.grid(False)
+ax2.axis('equal')
 
-# Title and legend
-plt.title("Real-time Plantar Pressure Distribution Heatmap - Size 8 US Feet (Narrowed and Symmetric)")
-
-# Initialize the heatmap
-heatmap_left = ax.imshow(np.zeros((100, 100)), extent=(0, 2.4, 0, 1.4), origin='lower', cmap='hot', alpha=0.8)
-heatmap_right = ax.imshow(np.zeros((100, 100)), extent=(2.4, 4.8, 0, 1.4), origin='lower', cmap='hot', alpha=0.8)
-
-# Plot sensor positions as dots for both feet
-ax.scatter(left_sensor_positions[:, 0], left_sensor_positions[:, 1], color='blue', s=50, edgecolor='black', label='Left Foot Sensors')
-ax.scatter(right_sensor_positions[:, 0] + 2.4, right_sensor_positions[:, 1], color='green', s=50, edgecolor='black', label='Right Foot Sensors')
-plt.legend()
-
-def read_sensor_data():
-    # Simulated data reading - replace this with your actual sensor reading logic
-    return np.random.rand(len(left_sensor_positions))
-
-def update(frame):
-    # Read the latest sensor values
-    sensor_values = read_sensor_data()
-
-    # Normalize sensor values
-    normalized_values = (sensor_values - np.min(sensor_values)) / (np.max(sensor_values) - np.min(sensor_values))
-
-    # Create grids for interpolation
-    grid_x, grid_y = np.mgrid[0:2.4:100j, 0:1.4:100j]  # Adjusted for the shape of both feet
-    grid_z_left = griddata(left_sensor_positions, normalized_values, (grid_x, grid_y), method='cubic')
-    grid_z_right = griddata(right_sensor_positions, normalized_values, (grid_x, grid_y), method='cubic')
-
-    # Update the heatmap data
-    heatmap_left.set_array(grid_z_left.T)
-    heatmap_right.set_array(grid_z_right.T)
-
-# Use FuncAnimation to update the plot in real-time
-ani = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=200)  # Update every 200 ms
-
+# Show the plot
+plt.tight_layout()
 plt.show()

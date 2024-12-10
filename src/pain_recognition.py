@@ -16,7 +16,7 @@ import tempfile
 feature_extractor = MobileNetV2(weights='imagenet', include_top=False, pooling='avg')
 
 # Load the pain recognition model
-model_path = r"C:\Users\SALMAN\Downloads\nn_700_4fps_79.keras"
+model_path = r"E:\Final Year Project\ortho_project\models\nn_700_last.keras"
 pain_model = load_model(model_path)
 
 # Define the face detector using Haar cascades
@@ -33,7 +33,7 @@ def extract_features(img):
 
 def process_video(patient_folder):
     st.write("Press 'Start Stream' to begin.")
-
+    
     # Initialize session state variables
     if 'streaming' not in st.session_state:
         st.session_state.streaming = False
@@ -61,7 +61,7 @@ def process_video(patient_folder):
     graph_placeholder = st.empty()
 
     if st.session_state.streaming:
-        cap = cv2.VideoCapture(0)  # Use the default camera (index 0)
+        cap = cv2.VideoCapture(1)  # Use the default camera (index 0)
         resize_width = 400
         resize_height = 380
 
@@ -102,7 +102,7 @@ def process_video(patient_folder):
                 cv2.putText(frame, f'Pain Level: {pain_level}', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
             
             # Display the video feed
-            video_placeholder.image(frame, channels='BGR', use_column_width=True)
+            video_placeholder.image(frame, channels='BGR', use_container_width=True)
 
             # Update and display the graph
             if st.session_state.pain_levels:
@@ -128,12 +128,17 @@ def process_video(patient_folder):
                                   xaxis_title='Time',
                                   yaxis_title='Pain Level')
 
-                # Create a temporary directory to save the report
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    report_path = os.path.join(temp_dir, f'pain_level_report_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png')
-                    fig.write_image(report_path)
-                    st.success(f'Report saved to temporary location: {report_path}')
-                    st.download_button(label='Download Report', data=open(report_path, 'rb').read(), file_name=os.path.basename(report_path), mime='image/png')
+                # Ensure the patient folder exists
+                if not os.path.exists(patient_folder):
+                    os.makedirs(patient_folder)
+
+                # Save the report to the patient folder
+                report_filename = f'pain_level_report_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
+                report_path = os.path.join(patient_folder, report_filename)
+                fig.write_image(report_path)
+                
+                st.success(f'Report saved to: {report_path}')
+                st.download_button(label='Download Report', data=open(report_path, 'rb').read(), file_name=report_filename, mime='image/png')
             else:
                 st.warning('No data available to save.')
 

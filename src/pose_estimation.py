@@ -79,18 +79,18 @@ def run_pose_estimation(patient_folder):
         if st.button("Take Screenshot", key="screenshot_button"):
             if st.session_state.frame_for_screenshot is not None:
                 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
-                    screenshot_filename = tmp_file.name
-                    cv2.imwrite(screenshot_filename, st.session_state.frame_for_screenshot)
-                    st.write(f"Screenshot saved temporarily as {screenshot_filename}")
-                    st.session_state.screenshot_counter += 1
-                    st.session_state.latest_screenshot = screenshot_filename
+                # Save screenshot in patient folder
+                screenshot_filename = os.path.join(patient_folder, f"pose_screenshot_{timestamp}.png")
+                cv2.imwrite(screenshot_filename, st.session_state.frame_for_screenshot)
+                st.write(f"Screenshot saved as {screenshot_filename}")
+                st.session_state.screenshot_counter += 1
+                st.session_state.latest_screenshot = screenshot_filename
             else:
                 st.write("No frame available to capture.")
 
     if st.session_state.start_pose:
         stframe = st.empty()
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(1)
         detector = poseDetector()
 
         while st.session_state.start_pose:
