@@ -1,11 +1,11 @@
 import streamlit as st
 import os
-import tempfile
 from streamlit_option_menu import option_menu
 from pain_recognition import process_video
 from pose_estimation import run_pose_estimation
 from plantar_pressure import run_plantar_pressure_analysis
 from report_generation import generate_report
+import tempfile
 
 # Set page configuration
 st.set_page_config(page_title="OrthoSynergy", layout="wide", initial_sidebar_state="expanded")
@@ -17,9 +17,22 @@ def create_patient_folder(patient_name, patient_age):
         os.makedirs(patient_folder)
     return patient_folder
 
+# Function to save patient photo in the patient folder
+def save_patient_photo(photo, patient_folder, patient_name, patient_age):
+    if photo:
+        # Define the file path for saving the photo as 'name_age.jpg'
+        photo_path = os.path.join(patient_folder, f"{patient_name}_{patient_age}.jpg")
+        
+        # Save the photo to the defined path
+        with open(photo_path, "wb") as f:
+            f.write(photo.getvalue())
+        return photo_path
+    return None
+
 def main():
-    # Custom styling for fonts, sidebar, and font colors
-    st.markdown("""
+    # Apply custom styling
+    st.markdown(
+        """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
 
@@ -31,98 +44,98 @@ def main():
 
     h1, h2, h3, h4, h5, p {
         font-family: 'Merriweather', serif;
-        color: #0a246e;  /* Set headings and paragraph text color to black */
+        color: #0a246e;
     }
 
     .css-1d391kg {
-        background: linear-gradient(to bottom, #f2f2f2, #d9d9d9);  /* Sidebar gradient color - light gray */
-        color: black;  /* Sidebar text color */
+        background: linear-gradient(to bottom, #f2f2f2, #d9d9d9);
+        color: black;
     }
 
     .stApp {
-        background-image: url("https://fmsportsortho.com/wp-content/uploads/2019/08/medical-bg-1.jpg"); /* Optional background image */
+        background-image: url("https://fmsportsortho.com/wp-content/uploads/2019/08/medical-bg-1.jpg");
         background-size: cover;
     }
 
-    .css-17eq0hr {
-        color: black;  /* Sidebar text color */
-    }
-
-    .css-1n543e5 {
-        color: #ffcc00;  /* Sidebar title color*/
-    }
-
-    .css-1e5imcs {
-        background-color: #f0f8ff;  /* Light blue background for main container */
-    }
-
-    /* Option menu customization */
-    .stOptionMenu {
-        background-color: #ffffff;  /* Option menu background color */
-        border-radius: 5px;  /* Optional: rounded corners */
-    }
-
-    .stOptionMenu .css-1e5imcs {
-        color: black;  /* Menu item text color */
-    }
-
-    .stOptionMenu .css-1e5imcs:hover {
-        background-color: #146075;  /* Hover background color */
-        color: white;  /* Hover text color */
-    }
-
-    /* Button customization */
     .stButton > button {
-        background-color: #a2ccd3;  /* Light blue color */
-        color: black;  /* Button text color */
-        border: 2px solid black;  /* Remove border */
-        border-radius: 5px;  /* Rounded corners for buttons */
-        padding: 10px 20px;  /* Padding for buttons */
-        font-size: 20px;  /* Font size for button text */
-        cursor: pointer;  /* Cursor changes to pointer on hover */
+        background-color: #a2ccd3;
+        color: black;
+        border: 2px solid black;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 20px;
+        cursor: pointer;
     }
 
-    /* Button hover effect */
     .stButton > button:hover {
+<<<<<<< HEAD
         background-color: #fff;  /* Darker shade of light blue on hover */
+=======
+        background-color: #5f9ea0;
+>>>>>>> 2fe72bb4c88550d52205250ba97a3fbf79da701a
     }
     </style>
-""", unsafe_allow_html=True)  
+    """, unsafe_allow_html=True)
 
+<<<<<<< HEAD
     # Optional logo - local image
     st.sidebar.image(r"D:\1\Ortho_Synergy\src\transparent_ortho_synergy_logo.png", use_container_width=True)
+=======
+    # Sidebar for patient details
+    with st.sidebar:
+        st.image(r"E:\Final Year Project\ortho_project\src\transparent_ortho_synergy_logo.png", use_container_width=True)
+        st.title("Patient Details")
+        patient_name = st.text_input("Patient Name")
+        patient_age = st.text_input("Patient Age")
+>>>>>>> 2fe72bb4c88550d52205250ba97a3fbf79da701a
 
-    # Initialize session state for new patients
-    if 'create_new_patient' not in st.session_state:
+    # Initialize session state
+    if "create_new_patient" not in st.session_state:
         st.session_state.create_new_patient = False
         st.session_state.patient_name = ""
         st.session_state.patient_age = ""
+        st.session_state.patient_photo = None
         st.session_state.patient_folder = ""
 
-    # Sidebar menu for new patient creation
-    st.sidebar.title("Enter Patient Details")
-    st.session_state.patient_name = st.sidebar.text_input("Patient Name")
-    st.session_state.patient_age = st.sidebar.text_input("Patient Age")
-
-    if st.sidebar.button("Create New Patient"):
-        if st.session_state.patient_name and st.session_state.patient_age:
-            st.session_state.patient_folder = create_patient_folder(
-                st.session_state.patient_name, st.session_state.patient_age
-            )
-            st.session_state.create_new_patient = True
-            st.sidebar.empty()
+    # Main page content
+    if not st.session_state.create_new_patient:
+        # Photo capture section
+        st.subheader("Capture Patient Photo")
+        if not st.session_state.patient_photo:
+            patient_photo = st.camera_input("Take a picture")
+            if patient_photo:
+                # Create the patient folder
+                patient_folder = create_patient_folder(patient_name, patient_age)
+                # Save the photo in the patient folder
+                photo_path = save_patient_photo(patient_photo, patient_folder, patient_name, patient_age)
+                if photo_path:
+                    st.session_state.patient_photo = photo_path
+                    st.image(photo_path, caption="Captured Patient Photo", use_container_width=True)
+                    st.success("Photo saved successfully!")
+                else:
+                    st.error("Failed to save the photo.")
         else:
-            st.sidebar.warning("Please enter both patient name and age.")
+            st.image(st.session_state.patient_photo, caption="Patient Photo", use_container_width=True)
 
-    if st.session_state.create_new_patient:
-        # Option menu for module navigation
+        # Create new patient
+        if st.button("Create New Patient"):
+            if patient_name and patient_age and st.session_state.patient_photo:
+                st.session_state.patient_name = patient_name
+                st.session_state.patient_age = patient_age
+                st.session_state.patient_folder = create_patient_folder(patient_name, patient_age)
+                st.session_state.create_new_patient = True
+                st.success("Patient created successfully!")
+            else:
+                st.warning("Please fill out patient details and capture a photo.")
+    else:
+        # Display the option menu
         selected_module = option_menu(
             menu_title=None,
             options=["Pain Recognition", "Plantar Pressure", "Pose Estimation", "Generate Report"],
             icons=["camera", "footprints", "person", "file-earmark-text"],
             menu_icon="cast",
             default_index=0,
-            orientation="horizontal"
+            orientation="horizontal",
         )
 
         # Pain Recognition
@@ -130,41 +143,38 @@ def main():
             process_video(st.session_state.patient_folder)
 
         # Plantar Pressure
-        if selected_module == "Plantar Pressure":
+        elif selected_module == "Plantar Pressure":
             run_plantar_pressure_analysis(st.session_state.patient_folder)
 
         # Pose Estimation
-        if selected_module == "Pose Estimation":
+        elif selected_module == "Pose Estimation":
             run_pose_estimation(st.session_state.patient_folder)
 
         # Report Generation
-        if selected_module == "Generate Report":
+        elif selected_module == "Generate Report":
             st.header("Generate Patient Report")
             if st.button("Generate Report"):
-                if st.session_state.patient_folder:
-                    # Generate the report and store it temporarily
-                    pdf_path = generate_report(
-                        st.session_state.patient_folder,
-                        st.session_state.patient_name,
-                        st.session_state.patient_age
+                pdf_path = generate_report(
+                    st.session_state.patient_folder,
+                    st.session_state.patient_name,
+                    st.session_state.patient_age,
+                    st.session_state.patient_photo,
+                )
+                with open(pdf_path, "rb") as pdf_file:
+                    pdf_bytes = pdf_file.read()
+                    st.download_button(
+                        label="Download Report",
+                        data=pdf_bytes,
+                        file_name=os.path.basename(pdf_path),
+                        mime="application/pdf",
                     )
-                    # Provide a download link for the report
-                    with open(pdf_path, "rb") as pdf_file:
-                        pdf_bytes = pdf_file.read()
-                        st.download_button(
-                            label="Download Report",
-                            data=pdf_bytes,
-                            file_name=os.path.basename(pdf_path),
-                            mime="application/pdf"
-                        )
-                else:
-                    st.warning("Patient folder not found.")
-                
+
             if st.button("Reset for New Patient"):
                 st.session_state.create_new_patient = False
                 st.session_state.patient_name = ""
                 st.session_state.patient_age = ""
                 st.session_state.patient_folder = ""
+                st.session_state.patient_photo = None
 
 if __name__ == "__main__":
     main()
