@@ -6,6 +6,7 @@ import os
 import datetime
 import tempfile
 
+
 class poseDetector:
     def __init__(self, mode=False, modelComp=1, smoothlm=True, segment=False, smoothsegment=True, detectionCon=0.5, trackingCon=0.5):
         self.mode = mode

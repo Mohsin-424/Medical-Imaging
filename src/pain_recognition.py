@@ -16,7 +16,7 @@ import tempfile
 feature_extractor = MobileNetV2(weights='imagenet', include_top=False, pooling='avg')
 
 # Load the pain recognition model
-model_path = r"C:\Users\SALMAN\Downloads\nn_700_4fps_79.keras"
+model_path = r"D:\1\Ortho_Synergy\models\nn_new.keras"
 pain_model = load_model(model_path)
 
 # Define the face detector using Haar cascades
@@ -102,7 +102,7 @@ def process_video(patient_folder):
                 cv2.putText(frame, f'Pain Level: {pain_level}', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
             
             # Display the video feed
-            video_placeholder.image(frame, channels='BGR', use_column_width=True)
+            video_placeholder.image(frame, channels='BGR', use_container_width=True)
 
             # Update and display the graph
             if st.session_state.pain_levels:

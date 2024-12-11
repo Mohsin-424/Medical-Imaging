@@ -84,13 +84,13 @@ def main():
 
     /* Button hover effect */
     .stButton > button:hover {
-        background-color: #5f9ea0;  /* Darker shade of light blue on hover */
+        background-color: #fff;  /* Darker shade of light blue on hover */
     }
     </style>
 """, unsafe_allow_html=True)  
 
     # Optional logo - local image
-    st.sidebar.image(r"E:\Final Year Project\ortho_project\src\transparent_ortho_synergy_logo.png", use_column_width=True)
+    st.sidebar.image(r"D:\1\Ortho_Synergy\src\transparent_ortho_synergy_logo.png", use_container_width=True)
 
     # Initialize session state for new patients
     if 'create_new_patient' not in st.session_state:
